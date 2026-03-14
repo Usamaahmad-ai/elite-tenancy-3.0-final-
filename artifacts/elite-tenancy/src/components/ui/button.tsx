@@ -10,15 +10,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "default", size = "default", ...props }, ref) => {
     const variants = {
       default: "bg-white text-black hover:bg-white/90",
-      gold: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_15px_rgba(201,168,76,0.2)] hover:shadow-[0_0_25px_rgba(201,168,76,0.4)]",
-      outline: "border border-primary/50 text-primary hover:bg-primary/10",
-      ghost: "hover:bg-white/10 text-white",
-      link: "text-primary underline-offset-4 hover:underline",
+      gold: "bg-[#C9A84C] text-black font-medium hover:bg-[#b8963e] transition-colors",
+      outline: "border border-white/40 text-white hover:border-white hover:bg-white/5 transition-colors",
+      ghost: "text-white/70 hover:text-white hover:bg-white/5 transition-colors",
+      link: "text-[#C9A84C] underline-offset-4 hover:underline",
     }
     const sizes = {
-      default: "h-12 px-6 py-2",
-      sm: "h-9 rounded-md px-3",
-      lg: "h-14 rounded-md px-8 text-lg",
+      default: "h-11 px-6 py-2 text-sm",
+      sm: "h-9 px-4 text-xs",
+      lg: "h-13 px-10 py-3 text-base",
       icon: "h-10 w-10",
     }
 
@@ -26,7 +26,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center whitespace-nowrap rounded-sm text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#C9A84C] disabled:pointer-events-none disabled:opacity-50 tracking-wide",
           variants[variant],
           sizes[size],
           className

@@ -56,12 +56,12 @@ export function Layout({ children }: { children: ReactNode }) {
             ))}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-4">
+          <div className="hidden lg:flex items-center gap-3">
             <Link href="/contact?type=tenant">
-              <Button variant="outline" className="rounded-none border-primary/30 hover:border-primary">Find a Room</Button>
+              <Button variant="outline" className="text-xs tracking-widest uppercase">Find a Room</Button>
             </Link>
             <Link href="/contact?type=landlord">
-              <Button variant="gold" className="rounded-none">List a Room</Button>
+              <Button variant="gold" className="text-xs tracking-widest uppercase">List a Room</Button>
             </Link>
           </div>
 

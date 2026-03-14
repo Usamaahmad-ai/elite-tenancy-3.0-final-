@@ -1,225 +1,325 @@
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 
+const BASE = import.meta.env.BASE_URL;
+
+const EXAMPLES = [
+  { rent: 700,  label: "Studio room, Northern cities" },
+  { rent: 950,  label: "Double room, Midlands" },
+  { rent: 1300, label: "Ensuite, South England" },
+];
+
+const FAQS = [
+  { q: "When do I pay the fee?", a: "Only on successful placement. If we don't fill your room, you pay nothing." },
+  { q: "Are there any hidden charges?", a: "No. One fee. No management, no renewal, no admin, no VAT surprises. The calculator shows exactly what you pay." },
+  { q: "What if the tenant leaves early?", a: "If your tenant vacates within 30 days of moving in, we find a replacement at no additional charge. In writing." },
+  { q: "Can I negotiate the fee?", a: "No. The formula is the formula. It's the same for every landlord — that's what makes it fair and transparent." },
+  { q: "How do I pay?", a: "Bank transfer on the day the tenancy agreement is signed. Not a day before." },
+  { q: "Does the fee include VAT?", a: "The figure our calculator shows is the total you pay. No additional VAT is added on top." },
+];
+
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-white/8">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex justify-between items-center py-6 text-left group"
+      >
+        <span className="font-serif text-lg text-white group-hover:text-[#C9A84C] transition-colors">{q}</span>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25 }}>
+          <ChevronDown className="w-4 h-4 text-white/30 shrink-0 ml-4" />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <p className="text-white/50 text-sm leading-relaxed pb-6 pl-0 border-l-2 border-[#C9A84C]/30 pl-5 ml-0">
+              {a}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function Bar({ height, label, amount, gold }: { height: number; label: string; amount: string; gold?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true });
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="text-center">
+        <p className={`font-serif text-xl ${gold ? "text-[#C9A84C]" : "text-white/60"}`}>{amount}</p>
+        <p className="text-white/30 text-xs uppercase tracking-widest mt-1">{label}</p>
+      </div>
+      <div ref={ref} className="w-20 bg-white/5 relative" style={{ height: 180 }}>
+        <motion.div
+          className={`absolute bottom-0 left-0 right-0 ${gold ? "bg-[#C9A84C]" : "bg-white/15"}`}
+          initial={{ height: 0 }}
+          animate={inView ? { height: `${height}%` } : {}}
+          transition={{ duration: 1.2, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function Pricing() {
-  const [rent, setRent] = useState<number>(1000);
-  const [showResults, setShowResults] = useState(false);
-  const [barAnimated, setBarAnimated] = useState(false);
-  const barRef = useRef<HTMLDivElement>(null);
+  const [rent, setRent] = useState(950);
+  const [inputVal, setInputVal] = useState("950");
+  const calcRef = useRef<HTMLDivElement>(null);
+  const inView = useInView(calcRef, { once: true });
 
-  const calculateFee = (monthlyRent: number) => {
-    return ((monthlyRent * 12) / 52) * 2;
+  const ourFee = (rent * 12) / 52 * 2;
+  const tradFee = rent * 12 * 0.10;
+  const saving = tradFee - ourFee;
+  const barRatio = ourFee / tradFee;
+
+  const handleInput = (v: string) => {
+    setInputVal(v);
+    const n = parseInt(v.replace(/[^0-9]/g, ""), 10);
+    if (!isNaN(n) && n >= 100 && n <= 20000) setRent(n);
   };
 
-  const handleInteraction = (val: number) => {
-    setRent(val);
-    setShowResults(true);
+  const handleSlider = (v: number) => {
+    setRent(v);
+    setInputVal(String(v));
   };
 
-  const fee = calculateFee(rent);
-  const traditionalFee = rent * 12 * 0.10;
-  const savings = traditionalFee - fee;
+  const calcInView = useInView(calcRef, { once: true });
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setBarAnimated(true);
-        }
-      },
-      { threshold: 0.5 }
-    );
-    if (barRef.current) observer.observe(barRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
-
-  const faqs = [
-    { q: "When do I pay?", a: "Only when a verified tenant signs the tenancy agreement and pays their first month's rent. No upfront costs." },
-    { q: "Are there any hidden charges?", a: "No. The fee you see calculated here is the absolute final amount. No VAT add-ons, no renewal fees, no admin costs." },
-    { q: "What if the tenant leaves early?", a: "We offer a 14-day guarantee. If the tenant fails within the first 14 days, we replace them completely free of charge." },
-    { q: "Can I negotiate the fee?", a: "No. We operate a fixed, transparent formula for every landlord in the UK to ensure fairness and maintain our high standards of verification." },
-    { q: "How is the payment collected?", a: "We deduct our one-off fee from the first month's rent collected from the tenant before passing the balance to you." },
-    { q: "Is VAT included?", a: "Yes, all our calculations include VAT where applicable. What you see is what you pay." }
-  ];
+  const heroRef = useRef<HTMLDivElement>(null);
+  const heroInView = useInView(heroRef, { once: true });
 
   return (
-    <div className="w-full pt-32 pb-24 bg-background">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-24">
-          <div className="w-16 h-[1px] bg-primary mx-auto mb-8" />
-          <h1 className="font-serif text-5xl md:text-7xl text-white mb-6">Complete Transparency.</h1>
-          <p className="text-white/50 text-xl">The property industry hides behind percentages. We use absolute numbers.</p>
-        </div>
+    <div className="w-full bg-background pt-24">
 
-        {/* GIANT NUMBERS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-32">
-          <div className="bg-card border border-white/10 p-12 text-center flex flex-col justify-center gold-glow-pulse relative overflow-hidden">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
-            <h2 className="text-white/50 uppercase tracking-widest text-sm mb-8 relative z-10">For Tenants</h2>
-            <div className="font-serif text-8xl md:text-[120px] text-primary mb-4 leading-none relative z-10">£0</div>
-            <p className="text-white/80 text-xl font-serif relative z-10">Always. Forever. By law.</p>
-          </div>
-          
-          <div className="bg-card border border-white/10 p-12 text-center flex flex-col justify-center">
-            <h2 className="text-white/50 uppercase tracking-widest text-sm mb-8">For Landlords</h2>
-            <div className="font-serif text-4xl md:text-5xl text-white mb-6 leading-relaxed">
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>Rent × 12</motion.div>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }} className="text-white/30">÷ 52</motion.div>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.0 }} className="text-primary">× 2</motion.div>
-            </div>
-            <p className="text-white/80 text-xl font-serif">Two weeks rent. That's it.</p>
-          </div>
-        </div>
-
-        {/* CALCULATOR */}
-        <div 
-          className="max-w-4xl mx-auto p-8 md:p-16 relative overflow-hidden mb-32"
-          style={{
-            background: 'linear-gradient(#111,#111) padding-box, linear-gradient(45deg, #C9A84C, #8B6914) border-box',
-            border: '1px solid transparent'
-          }}
-        >
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <h3 className="font-serif text-3xl md:text-4xl text-white mb-12 text-center">Calculate Your Exact Fee</h3>
-          
-          <div className="flex flex-col items-center mb-12">
-            <label className="text-white/50 mb-4 uppercase tracking-widest text-sm">Monthly Rent</label>
-            <div className="flex items-center text-5xl md:text-7xl font-serif text-white mb-8 border-b border-white/20 pb-2">
-              <span className="text-primary mr-2">£</span>
-              <input 
-                type="number" 
-                min="400" 
-                max="10000" 
-                value={rent}
-                onChange={(e) => handleInteraction(Number(e.target.value))}
-                className="bg-transparent border-none outline-none w-[200px] text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-            <input 
-              type="range" 
-              min="400" 
-              max="5000" 
-              step="50"
-              value={rent}
-              onChange={(e) => handleInteraction(Number(e.target.value))}
-              className="w-full max-w-md gold-slider"
-            />
-          </div>
-
-          <div className="brand-line mb-12" />
-
-          {/* FORMULA BREAKDOWN */}
-          <div className="max-w-2xl mx-auto space-y-4 mb-16">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: showResults ? 1 : 0.5 }} transition={{ delay: 0.1 }} className="flex justify-between text-lg">
-               <span className="text-white/60">Monthly rent</span>
-               <span className="text-white">£{rent.toLocaleString()}</span>
-            </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: showResults ? 1 : 0.5 }} transition={{ delay: 0.2 }} className="flex justify-between text-lg">
-               <span className="text-white/60">Annual (× 12)</span>
-               <span className="text-white">£{(rent * 12).toLocaleString()}</span>
-            </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: showResults ? 1 : 0.5 }} transition={{ delay: 0.3 }} className="flex justify-between text-lg">
-               <span className="text-white/60">Weekly (÷ 52)</span>
-               <span className="text-white">£{(rent * 12 / 52).toFixed(2)}</span>
-            </motion.div>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: showResults ? 1 : 0.5 }} transition={{ delay: 0.4 }} className="flex justify-between text-2xl md:text-3xl font-serif mt-6 pt-6 border-t border-white/10 gold-glow-pulse">
-               <span className="text-primary">Your fee (× 2)</span>
-               <span className="text-primary text-glow">£{fee.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
-            </motion.div>
-            <p className="text-center text-white/40 text-sm mt-6 pt-4">One-time. On successful placement only. No hidden charges.</p>
-          </div>
-
-          {/* COMPARISON BARS */}
-          <div ref={barRef} className="max-w-xl mx-auto mb-12">
-            <h4 className="text-center text-white/50 text-sm uppercase tracking-widest mb-8">Compared to 10% Traditional Agent</h4>
-            <div className="flex justify-center items-end gap-12 h-[200px] border-b border-white/20 pb-4">
-              <div className="flex flex-col items-center w-32">
-                <span className="text-white mb-2 font-serif text-xl">£{traditionalFee.toFixed(0)}</span>
-                <motion.div 
-                  className="w-full bg-white/10"
-                  initial={{ height: 0 }}
-                  animate={{ height: barAnimated ? "100%" : 0 }}
-                  transition={{ duration: 1, ease: "easeOut" }}
-                />
-                <span className="text-white/40 text-xs mt-4 uppercase">Traditional</span>
-              </div>
-              <div className="flex flex-col items-center w-32">
-                <span className="text-primary mb-2 font-serif text-xl">£{fee.toFixed(0)}</span>
-                <motion.div 
-                  className="w-full bg-primary shadow-[0_0_15px_rgba(201,168,76,0.3)]"
-                  initial={{ height: 0 }}
-                  animate={{ height: barAnimated ? `${(fee / traditionalFee) * 100}%` : 0 }}
-                  transition={{ duration: 1, ease: "easeOut", delay: 0.2 }}
-                />
-                <span className="text-primary text-xs mt-4 uppercase">Elite</span>
-              </div>
-            </div>
-            <p className="text-center text-white/80 font-serif text-lg mt-6">
-              You save <span className="text-primary">£{savings.toFixed(2)}</span> in year one alone.
+      {/* ─── HERO ─────────────────────────────────────────────── */}
+      <section ref={heroRef} className="py-32 max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-end">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <p className="label-upper mb-8">Transparent Pricing</p>
+            <h1 className="font-serif text-[clamp(3rem,6vw,5.5rem)] text-white leading-tight mb-8">
+              Complete<br />transparency.
+            </h1>
+            <div className="brand-line max-w-xs mb-8" />
+            <p className="text-white/50 text-xl font-serif italic leading-snug max-w-sm">
+              The property industry hides behind percentages.<br />We use absolute numbers.
             </p>
+          </motion.div>
+
+          <motion.div
+            className="grid grid-cols-2 gap-px bg-white/5"
+            initial={{ opacity: 0 }}
+            animate={heroInView ? { opacity: 1 } : {}}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            <div className="bg-background p-12 flex flex-col justify-center">
+              <p className="text-white/30 text-xs uppercase tracking-[0.2em] mb-6">For Tenants</p>
+              <div className="font-serif text-[5rem] text-[#C9A84C] leading-none mb-4">£0</div>
+              <div className="w-8 h-[1px] bg-[#C9A84C] mb-4" />
+              <p className="text-white/40 text-sm">Always. Forever. By law.</p>
+            </div>
+            <div className="bg-[#060606] p-12 flex flex-col justify-center">
+              <p className="text-white/30 text-xs uppercase tracking-[0.2em] mb-6">For Landlords</p>
+              <div className="space-y-3">
+                {[
+                  { step: "Monthly rent", op: "×12" },
+                  { step: "Annual rent", op: "÷52" },
+                  { step: "Weekly rent", op: "×2" },
+                ].map((row, i) => (
+                  <motion.div
+                    key={i}
+                    className="flex items-center justify-between"
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={heroInView ? { opacity: 1, x: 0 } : {}}
+                    transition={{ delay: 0.6 + i * 0.15, duration: 0.6 }}
+                  >
+                    <span className="text-white/40 text-sm">{row.step}</span>
+                    <span className="font-serif text-xl text-white">{row.op}</span>
+                  </motion.div>
+                ))}
+                <div className="h-[1px] bg-white/10 my-2" />
+                <div className="flex justify-between items-center">
+                  <span className="text-white/40 text-sm">Your fee</span>
+                  <span className="font-serif text-xl text-[#C9A84C]">≈ 2 weeks rent</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ─── CALCULATOR ───────────────────────────────────────── */}
+      <section className="py-20 bg-[#040404] border-y border-white/5">
+        <div className="max-w-5xl mx-auto px-6 lg:px-8" ref={calcRef}>
+          <div className="text-center mb-16">
+            <p className="label-upper mb-6">Interactive Calculator</p>
+            <h2 className="font-serif text-4xl md:text-5xl text-white">Your exact fee to the penny.</h2>
           </div>
-          
-          <div className="mt-12 text-center">
-             <Button variant="gold" size="lg" className="px-12 shimmer-btn">Proceed with £{fee.toLocaleString(undefined, {maximumFractionDigits:0})} Fee</Button>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-px bg-white/5">
+            {/* INPUT SIDE */}
+            <div className="bg-[#070707] p-10 md:p-14 flex flex-col gap-10">
+              <div>
+                <p className="text-white/40 text-xs uppercase tracking-[0.2em] mb-6">Monthly rent amount</p>
+                <div className="flex items-baseline gap-2 border-b border-white/10 pb-4">
+                  <span className="font-serif text-5xl text-white/40">£</span>
+                  <input
+                    type="number"
+                    value={inputVal}
+                    onChange={e => handleInput(e.target.value)}
+                    onBlur={() => setInputVal(String(rent))}
+                    className="font-serif text-5xl text-white bg-transparent border-none outline-none w-full min-w-0"
+                    min={100}
+                    max={20000}
+                    style={{ appearance: "textfield" }}
+                  />
+                  <span className="text-white/20 text-sm shrink-0">/mo</span>
+                </div>
+                <input
+                  type="range"
+                  min={400}
+                  max={5000}
+                  step={50}
+                  value={Math.min(rent, 5000)}
+                  onChange={e => handleSlider(Number(e.target.value))}
+                  className="gold-slider mt-6 w-full"
+                />
+                <div className="flex justify-between mt-2">
+                  <span className="text-white/20 text-xs">£400</span>
+                  <span className="text-white/20 text-xs">£5,000</span>
+                </div>
+              </div>
+
+              {/* Quick examples */}
+              <div>
+                <p className="text-white/30 text-xs uppercase tracking-[0.2em] mb-4">Quick examples</p>
+                <div className="flex flex-col gap-2">
+                  {EXAMPLES.map(ex => (
+                    <button
+                      key={ex.rent}
+                      onClick={() => { setRent(ex.rent); setInputVal(String(ex.rent)); }}
+                      className={`flex justify-between items-center px-4 py-3 text-left transition-colors text-sm border ${
+                        rent === ex.rent
+                          ? "border-[#C9A84C]/40 bg-[#C9A84C]/5 text-white"
+                          : "border-white/5 text-white/40 hover:border-white/15 hover:text-white/70"
+                      }`}
+                    >
+                      <span className="text-xs">{ex.label}</span>
+                      <span className="font-serif text-base">£{ex.rent}/mo</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* RESULTS SIDE */}
+            <div className="bg-[#0a0a0a] p-10 md:p-14 flex flex-col justify-between gap-10">
+              {/* Formula breakdown */}
+              <div className="space-y-4">
+                <p className="text-white/30 text-xs uppercase tracking-[0.2em] mb-6">Calculation breakdown</p>
+                {[
+                  { label: "Monthly rent", val: `£${rent.toLocaleString()}`, muted: false },
+                  { label: "Annual rent (× 12)", val: `£${(rent * 12).toLocaleString()}`, muted: true },
+                  { label: "Weekly rent (÷ 52)", val: `£${(rent * 12 / 52).toFixed(2)}`, muted: true },
+                ].map((row, i) => (
+                  <motion.div
+                    key={i}
+                    className="flex justify-between items-center py-3 border-b border-white/5"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.4, delay: i * 0.08 }}
+                  >
+                    <span className={`text-sm ${row.muted ? "text-white/30" : "text-white/60"}`}>{row.label}</span>
+                    <span className={`font-serif text-lg ${row.muted ? "text-white/30" : "text-white"}`}>{row.val}</span>
+                  </motion.div>
+                ))}
+
+                <motion.div
+                  className="flex justify-between items-center py-4 border-t border-[#C9A84C]/20 mt-2"
+                  layout
+                  key={ourFee}
+                >
+                  <div>
+                    <p className="text-white/40 text-xs uppercase tracking-[0.2em]">Your placement fee (× 2)</p>
+                    <p className="text-white/30 text-xs mt-1">One-time · On successful placement only</p>
+                  </div>
+                  <motion.div
+                    key={ourFee}
+                    initial={{ scale: 0.95, opacity: 0.6 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-right"
+                  >
+                    <p className="font-serif text-4xl text-[#C9A84C]">
+                      £{ourFee.toFixed(2)}
+                    </p>
+                  </motion.div>
+                </motion.div>
+              </div>
+
+              {/* Bar chart comparison */}
+              <div>
+                <p className="text-white/30 text-xs uppercase tracking-[0.2em] mb-8">vs. traditional agent</p>
+                <div className="flex items-end justify-center gap-16 mb-6">
+                  <Bar
+                    height={100}
+                    label="Traditional Agent"
+                    amount={`£${tradFee.toFixed(0)}`}
+                  />
+                  <Bar
+                    height={Math.max(barRatio * 100, 8)}
+                    label="Elite Tenancy"
+                    amount={`£${ourFee.toFixed(0)}`}
+                    gold
+                  />
+                </div>
+                <div className="bg-[#C9A84C]/5 border border-[#C9A84C]/15 p-4 text-center">
+                  <p className="text-[#C9A84C] font-serif text-sm">
+                    You save <span className="text-lg">£{saving.toFixed(2)}</span> in year one
+                  </p>
+                  <p className="text-white/30 text-xs mt-1">Based on 10% annual management fee industry average</p>
+                </div>
+              </div>
+
+              <Link href="/contact?type=landlord">
+                <Button variant="gold" className="w-full tracking-widest text-xs uppercase h-13">
+                  Proceed with £{ourFee.toFixed(0)} fee
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
+      </section>
 
-        {/* WORKED EXAMPLES */}
-        <div className="mb-32">
-          <h3 className="font-serif text-3xl text-white mb-8 text-center">Quick Examples</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {[700, 950, 1300].map((exRent) => (
-               <div 
-                 key={exRent} 
-                 onClick={() => handleInteraction(exRent)}
-                 className="bg-card border border-white/10 p-6 cursor-pointer hover:border-primary/50 transition-colors text-center group"
-               >
-                  <p className="text-white/50 text-sm mb-2">Rent £{exRent}</p>
-                  <p className="font-serif text-2xl text-white mb-4">Fee: £{calculateFee(exRent).toFixed(2)}</p>
-                  <span className="text-primary text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Click to calculate</span>
-               </div>
-            ))}
-          </div>
+      {/* ─── FAQ ──────────────────────────────────────────────── */}
+      <section className="py-32 max-w-3xl mx-auto px-6 lg:px-8">
+        <p className="label-upper mb-8">Common Questions</p>
+        <h2 className="font-serif text-4xl text-white mb-16">Every money question. Answered honestly.</h2>
+        {FAQS.map((faq, i) => <FAQItem key={i} q={faq.q} a={faq.a} />)}
+        <div className="mt-16 text-center">
+          <Link href="/contact?type=landlord">
+            <Button variant="gold" size="lg" className="tracking-widest text-xs uppercase min-w-[240px]">
+              Get started
+            </Button>
+          </Link>
         </div>
-
-        {/* FAQ ACCORDION */}
-        <div className="max-w-3xl mx-auto">
-          <h3 className="font-serif text-3xl text-white mb-12 text-center">Financial FAQs</h3>
-          <div className="space-y-4">
-            {faqs.map((faq, idx) => (
-               <div key={idx} className="bg-[#111] border border-white/5 overflow-hidden">
-                 <button 
-                   className="w-full px-6 py-6 flex justify-between items-center text-left"
-                   onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-                 >
-                   <span className="font-serif text-xl text-white">{faq.q}</span>
-                   <ChevronDown className={`w-5 h-5 text-primary transition-transform duration-300 ${openIndex === idx ? 'rotate-180' : ''}`} />
-                 </button>
-                 <AnimatePresence>
-                   {openIndex === idx && (
-                     <motion.div
-                       initial={{ height: 0, opacity: 0 }}
-                       animate={{ height: "auto", opacity: 1 }}
-                       exit={{ height: 0, opacity: 0 }}
-                       transition={{ duration: 0.3 }}
-                     >
-                       <div className="px-6 pb-6 text-white/60 leading-relaxed pl-6 border-l-2 border-primary/30 ml-6 mb-6">
-                         {faq.a}
-                       </div>
-                     </motion.div>
-                   )}
-                 </AnimatePresence>
-               </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
+      </section>
     </div>
   );
 }
