@@ -3,13 +3,17 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Elite Tenancy API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: contacts
+    description: Contact form submissions
+  - name: stats
+    description: Live activity statistics
 paths:
   /healthz:
     get:
@@ -24,6 +28,56 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /contacts:
+    post:
+      operationId: submitContact
+      tags: [contacts]
+      summary: Submit a contact form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactSubmission"
+      responses:
+        "201":
+          description: Contact submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
+        "400":
+          description: Invalid request
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get live activity stats
+      responses:
+        "200":
+          description: Live stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LiveStats"
+  /newsletter:
+    post:
+      operationId: subscribeNewsletter
+      tags: [contacts]
+      summary: Subscribe to newsletter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewsletterSubscription"
+      responses:
+        "201":
+          description: Subscribed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +87,57 @@ components:
           type: string
       required:
         - status
-
+    ContactSubmission:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [landlord, tenant]
+        field1:
+          type: string
+        field2:
+          type: string
+        field3:
+          type: string
+        email:
+          type: string
+      required:
+        - type
+        - field1
+        - field2
+        - field3
+    ContactResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
+    LiveStats:
+      type: object
+      properties:
+        landlordSubmissions7d:
+          type: integer
+        tenantSubmissions7d:
+          type: integer
+        totalLandlords:
+          type: integer
+        totalTenants:
+          type: integer
+      required:
+        - landlordSubmissions7d
+        - tenantSubmissions7d
+        - totalLandlords
+        - totalTenants
+    NewsletterSubscription:
+      type: object
+      properties:
+        email:
+          type: string
+        audience:
+          type: string
+      required:
+        - email

@@ -1,0 +1,37 @@
+packages:
+  "framer-motion": "For cinematic scroll animations, text reveals, and page transitions"
+  "react-hook-form": "For robust form handling in contact and submission forms"
+  "@hookform/resolvers": "For integrating Zod validation with forms"
+  "zod": "For schema validation of form inputs"
+  "clsx": "Utility for constructing className strings conditionally"
+  "tailwind-merge": "Utility to cleanly merge tailwind classes"
+
+images:
+  - path: "artifacts/elite-tenancy/public/images/hero-landlord.png"
+    description: "Cinematic, dark, moody photograph of a beautiful, luxurious empty living room with hardwood floors and large windows. Soft, dramatic lighting emphasizing space and potential. Editorial style."
+    aspect_ratio: "16:9"
+  - path: "artifacts/elite-tenancy/public/images/hero-tenant.png"
+    description: "Cinematic shot of a young professional looking out a train window arriving in a new city at dusk. Mood is hopeful, sophisticated, dark, with subtle gold and blue tones."
+    aspect_ratio: "16:9"
+  - path: "artifacts/elite-tenancy/public/images/profile-pack.png"
+    description: "Flat lay photograph on a dark premium walnut desk of a sophisticated 'Tenant Profile Pack'. Leather-bound folder, high-quality thick paper documents with subtle gold foil accents, a sleek pen. Very high-end legal/editorial feel."
+    aspect_ratio: "16:9"
+  - path: "artifacts/elite-tenancy/public/images/drone-city.png"
+    description: "Spectacular cinematic drone photograph of the London skyline at dusk. Deep moody blues, charcoal shadows, and glowing warm gold city lights. Highly architectural and premium."
+    aspect_ratio: "16:9"
+  - path: "artifacts/elite-tenancy/public/images/portrait-nurse.png"
+    description: "Editorial portrait of an NHS nurse in scrubs looking confidently at the camera. Dark, moody lighting, shallow depth of field. Feels like a magazine cover."
+    aspect_ratio: "3:4"
+  - path: "artifacts/elite-tenancy/public/images/portrait-landlord.png"
+    description: "Editorial portrait of a distinguished older gentleman (landlord) in a tailored dark suit. Photographed in a dimly lit, luxurious room. Confident, relieved expression. High contrast."
+    aspect_ratio: "3:4"
+  - path: "artifacts/elite-tenancy/public/images/portrait-pro.png"
+    description: "Editorial portrait of a stylish young female professional holding a coffee cup, walking in a modern city street. Cinematic dusk lighting, sharp, fashionable."
+    aspect_ratio: "3:4"
+  - path: "artifacts/elite-tenancy/public/images/article-1.png"
+    description: "Abstract, architectural close-up of a modern building facade with sharp angles and deep shadows. Premium real estate visual."
+    aspect_ratio: "16:9"
+
+notes:
+  - Application uses dark luxury aesthetic by default.
+  - Forms are stubbed with console logs or mock mutations as standard backend endpoints for these specific lead-gen forms aren't defined in the provided schema.
