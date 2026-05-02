@@ -1,7 +1,10 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "pnpm install",
   "buildCommand": "pnpm run build",
-  "framework": "vite",
-  "outputDirectory": "artifacts/elite-tenancy/dist/public"
+  "outputDirectory": "artifacts/elite-tenancy/dist",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "artifacts/api-server/src/index.ts" },
+    { "source": "/(.*)", "destination": "artifacts/elite-tenancy/dist/index.html" }
+  ]
 }
