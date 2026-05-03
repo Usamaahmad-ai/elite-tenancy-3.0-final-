@@ -1,7 +1,7 @@
 {
-  "installCommand": "pnpm install",
   "buildCommand": "pnpm --filter @workspace/elite-tenancy run build",
-  "outputDirectory": "artifacts/elite-tenancy/dist",
+  "outputDirectory": "dist",
+  "rootDirectory": "artifacts/elite-tenancy",
   "cleanUrls": true,
   "framework": null
 }
